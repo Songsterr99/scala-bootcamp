@@ -7,8 +7,11 @@ import cats.instances.either._
 import cats.instances.list._
 import cats.syntax.traverse._
 import io.circe
+import io.circe.Decoder
 import io.circe.parser._
 import io.circe.generic.JsonCodec
+import io.circe.generic.extras.{Configuration, ConfiguredJsonCodec}
+import io.circe.generic.semiauto.deriveDecoder
 import org.scalatest.EitherValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -53,10 +56,10 @@ class HomeworkSpec extends AnyWordSpec with Matchers with EitherValues {
 }
 
 object HomeworkSpec {
-  @JsonCodec final case class TeamTotals(assists: String, fullTimeoutRemaining: String, plusMinus: String)
+  @ConfiguredJsonCodec final case class TeamTotals(assists: String, fullTimeoutRemaining: String, plusMinus: String)
   @JsonCodec final case class TeamBoxScore(totals: TeamTotals)
   @JsonCodec final case class GameStats(hTeam: TeamBoxScore, vTeam: TeamBoxScore)
-  @JsonCodec final case class PrevMatchup(gameDate: LocalDate, gameId: String)
+  @JsonCodec final case class PrevMatchup(gameDate: String, gameId: String)
   @JsonCodec final case class BoxScore(
     basicGameData: Game,
     previousMatchup: PrevMatchup,
@@ -91,6 +94,16 @@ object HomeworkSpec {
     vTeam: TeamStats,
   )
   @JsonCodec final case class Scoreboard(games: List[Game], numGames: Int)
+
+  implicit val config: Configuration = Configuration.default.copy(
+    transformMemberNames = {
+      case "fullTimeoutRemaining" => "full_timeout_remaining"
+      case other => other
+    }
+  )
+
+  implicit val dateDecoder: Decoder[PrevMatchup] = deriveDecoder[PrevMatchup]
+    .map(nba => PrevMatchup(nba.gameDate.format(DateTimeFormatter.BASIC_ISO_DATE), nba.gameId))
 
   private def fetchScoreboard(date: LocalDate): Either[circe.Error, Scoreboard] = {
     val dateString = date.format(DateTimeFormatter.BASIC_ISO_DATE)
