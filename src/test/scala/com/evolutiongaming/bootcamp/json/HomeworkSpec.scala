@@ -59,7 +59,7 @@ object HomeworkSpec {
   @ConfiguredJsonCodec final case class TeamTotals(assists: String, fullTimeoutRemaining: String, plusMinus: String)
   @JsonCodec final case class TeamBoxScore(totals: TeamTotals)
   @JsonCodec final case class GameStats(hTeam: TeamBoxScore, vTeam: TeamBoxScore)
-  @JsonCodec final case class PrevMatchup(gameDate: String, gameId: String)
+  @JsonCodec final case class PrevMatchup(gameDate: LocalDate, gameId: String)
   @JsonCodec final case class BoxScore(
     basicGameData: Game,
     previousMatchup: PrevMatchup,
@@ -102,8 +102,8 @@ object HomeworkSpec {
     }
   )
 
-  implicit val dateDecoder: Decoder[PrevMatchup] = deriveDecoder[PrevMatchup]
-    .map(nba => PrevMatchup(nba.gameDate.format(DateTimeFormatter.BASIC_ISO_DATE), nba.gameId))
+  implicit val dateDecoder: Decoder[LocalDate] = Decoder.decodeString
+    .map(dateStr => LocalDate.parse(dateStr, DateTimeFormatter.BASIC_ISO_DATE))
 
   private def fetchScoreboard(date: LocalDate): Either[circe.Error, Scoreboard] = {
     val dateString = date.format(DateTimeFormatter.BASIC_ISO_DATE)
