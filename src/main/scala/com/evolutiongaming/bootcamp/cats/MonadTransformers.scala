@@ -1,5 +1,6 @@
 package com.evolutiongaming.bootcamp.cats
 
+import cats.data.EitherT
 import cats.syntax.all._
 import cats.instances.all._
 import cats.effect.IO
@@ -18,7 +19,11 @@ object For {
 
 
   // implement
-  def friendsOrders(userId: UserId): Either[Error, List[Item]] = ???
+  def friendsOrders(userId: UserId): Either[Error, List[Item]] = for {
+    friendIds <- getFriends(userId)
+    orderIds <- friendIds.map(getOrders).sequence.map(_.flatten)
+    items <- orderIds.map(getItems).sequence.map(_.flatten)
+  } yield items
 }
 
 

@@ -32,13 +32,15 @@ object Exercises {
    */
 
   // List[User]
-  val users: List[Option[User]] = ids.map(id => getUser(id))
+  val users: List[User] = ids.flatMap(id => getUser(id))
 
   // IO[List[User]]
-  val usersAsync: List[IO[Option[User]]] = ids.map(id => getUserAsync(id))
 
   // IO[List[UserId]]
-  val usersFriendsAsync: List[IO[Option[List[UserId]]]] = ids.map(id => getUserAsync(id).map(_.map(_.friends)))
+  val usersFriendsAsync: IO[List[UserId]] = ids
+    .map(id => getUserAsync(id).map(_.map(_.friends)))
+    .sequence
+    .map(_.flatten.flatten)
 
   // IO[List[User]]
   val usersFriendsFriendsAsync: List[IO[Option[List[IO[Option[User]]]]]] = ids.map(id => getUserAsync(id).map(_.map(_.friends.map(id => getUserAsync(id)))))

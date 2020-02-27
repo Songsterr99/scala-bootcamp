@@ -53,12 +53,15 @@ object Excercises {
 
     def unit[A](a: => A): F[A]
 
-    def apply[A, B](fab: F[A => B])(fa: F[A]): F[B] = unit(map(fab)(f => map(fa)(a => f(a))))
+    def apply[A, B](fab: F[A => B])(fa: F[A]): F[B] = join(map(fa)(a => map(fab)(f => f(a))))
+
+    def join[A](ffa: F[F[A]]): F[A] = flatMap(ffa)(identity)
 
     def product[A, B](fa: F[A], fb: F[B]): F[(A, B)] = apply(map(fa)(a => (b: B) => (a, b)))(fb)
 
     def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] = map(product(fa, fb))(a => f(a._1, a._2))
 
+    def flatMap[A, B](ma: F[A])(f: A => F[B]): F[B] = join(map(ma)(f))
 
     def sequence[A](fas: List[F[A]]): F[List[A]] = fas.foldRight(unit(List.empty[A])) {(a, result) =>
       map2(a, result)(_ :: _)
@@ -72,13 +75,13 @@ object Excercises {
   trait Monad[M[_]] extends Functor[M] {
     def unit[A](a: => A): M[A]
 
-    def apply[A, B](mab: M[A => B])(ma: M[A]): M[B] = unit(map(mab)(f => map(ma)(a => f(a))))
+    def apply[A, B](mab: M[A => B])(ma: M[A]): M[B] = join(map(mab)(f => map(ma)(a => f(a))))
 
     def flatMap[A, B](ma: M[A])(f: A => M[B]): M[B] = join(map(ma)(f))
 
     def product[A, B](fa: M[A], fb: M[B]): M[(A, B)] = apply(map(fa)(a => (b: B) => (a, b)))(fb)
 
-    def join[A](mma: M[M[A]]): M[A] = flatMap(mma)(ma => ma)
+    def join[A](mma: M[M[A]]): M[A] = flatMap(mma)(identity)
 
     def map[A, B](ma: M[A])(f: A => B): M[B] = apply(unit(f))(ma)
 
