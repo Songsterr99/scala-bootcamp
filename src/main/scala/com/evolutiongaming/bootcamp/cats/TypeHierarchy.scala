@@ -59,7 +59,7 @@ object Excercises {
 
     def product[A, B](fa: F[A], fb: F[B]): F[(A, B)] = apply(map(fa)(a => (b: B) => (a, b)))(fb)
 
-    def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] = map(product(fa, fb))(a => f(a._1, a._2))
+    def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] = map(product(fa, fb))(a => f.tupled(a))
 
     def flatMap[A, B](ma: F[A])(f: A => F[B]): F[B] = join(map(ma)(f))
 
@@ -85,7 +85,7 @@ object Excercises {
 
     def map[A, B](ma: M[A])(f: A => B): M[B] = apply(unit(f))(ma)
 
-    def map2[A, B, C](ma: M[A], mb: M[B])(f: (A, B) => C): M[C] = map(product(ma, mb))(a => f(a._1, a._2))
+    def map2[A, B, C](ma: M[A], mb: M[B])(f: (A, B) => C): M[C] = map(product(ma, mb))(a => f.tupled(a))
   }
 
 }
